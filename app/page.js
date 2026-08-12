@@ -11,7 +11,12 @@ export default function HomePage() {
   useEffect(() => {
     // BUG (FIABILITE): erreur JS declenchee automatiquement au chargement de la page
     // (reference a une variable non definie -> TypeError visible dans la console).
-    console.log("Utilisateur courant:", currentUser.name);
+    // Le setTimeout est volontaire : il sort le throw du cycle de rendu React pour que
+    // ce soit une simple erreur non interceptee (window.onerror) au lieu de faire planter
+    // toute la page via l'error boundary par defaut de Next.js.
+    setTimeout(() => {
+      console.log("Utilisateur courant:", currentUser.name);
+    }, 0);
   }, []);
 
   useEffect(() => {
