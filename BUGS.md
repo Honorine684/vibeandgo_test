@@ -2,6 +2,19 @@
 
 Site de test **volontairement bogué**, construit avec Next.js 14 (App Router) pour valider un outil de scan QA/sécurité automatisé. Toutes les données sensibles (clés API, tokens, mots de passe) sont **fausses** — aucun vrai secret n'est présent dans ce dépôt.
 
+## ✅ Bugs corrigés (test de résolution automatique)
+
+Un échantillon représentatif (1 par catégorie) a été **réellement corrigé** le 2026-08-13 pour valider qu'un scanner re-scanné détecte bien la disparition du bug et le marque comme résolu, plutôt que de simplement tester les faux négatifs sur bugs encore présents. Les 41 autres bugs du tableau restent intacts.
+
+| Bug | Catégorie | Fix appliqué | Où |
+|---|---|---|---|
+| XSS DOM sur `/recherche?q=` | Sécurité | `dangerouslySetInnerHTML` remplacé par de l'interpolation React classique (`{query}`), échappée automatiquement | `app/recherche/RechercheClient.js` |
+| Cookie de session sans Secure/HttpOnly/SameSite | Sécurité | Cookie posé côté serveur via un Route Handler (`Set-Cookie` avec `HttpOnly; Secure; SameSite=Strict`) au lieu de `document.cookie` côté client | `app/api/session/route.js` (nouveau), `app/connexion/ConnexionForm.js` |
+| Viewport non responsive (`width=1024`) | SEO | Remis à `width=device-width, initial-scale=1` | `app/layout.js` |
+| Lien mort `/a-propos` | Fiabilité | Page `/a-propos` créée (contenu réel, statut 200) | `app/a-propos/page.js` (nouveau) |
+
+Les lignes correspondantes dans les tableaux ci-dessous sont marquées **[CORRIGÉ]**.
+
 ## Comptes / valeurs utiles pour tester
 
 - Identifiants mockés de connexion : `test@vibeandgo.test` / `Test1234!` (le login échoue **volontairement** même avec ces identifiants corrects — voir bug FONCT-9).
@@ -30,10 +43,10 @@ Site de test **volontairement bogué**, construit avec Next.js 14 (App Router) p
 | Page | Catégorie | Bug | Où dans le code |
 |---|---|---|---|
 | Toutes les pages | Sécurité | Aucun header de sécurité applicatif (CSP, X-Frame-Options, X-Content-Type-Options...) | `next.config.js` — aucune fonction `headers()` définie |
-| Connexion | Sécurité | Cookie de session posé sans `Secure`, `HttpOnly` ni `SameSite` | `app/connexion/ConnexionForm.js` — `useEffect` : `document.cookie = "vg_session=..."` |
+| Connexion | Sécurité | **[CORRIGÉ]** ~~Cookie de session posé sans `Secure`, `HttpOnly` ni `SameSite`~~ | `app/connexion/ConnexionForm.js` + `app/api/session/route.js` |
 | Accueil | Sécurité | Fausse clé API visible en clair dans un commentaire HTML du code source | `app/page.js` — `dangerouslySetInnerHTML` contenant `<!-- DEBUG API_SECRET_KEY=FAKE-DO-NOT-USE-... -->` |
 | Inscription | Sécurité | Mot de passe stocké en clair dans `localStorage` | `app/inscription/InscriptionForm.js` — `handleSubmit` : `localStorage.setItem("vg_user_password", form.password)` |
-| Recherche | Sécurité | XSS DOM : le paramètre `?q=` est réinjecté sans échappement dans le DOM | `app/recherche/RechercheClient.js` — `dangerouslySetInnerHTML={{ __html: \`Resultats pour : ${query}\` }}` |
+| Recherche | Sécurité | **[CORRIGÉ]** ~~XSS DOM : le paramètre `?q=` est réinjecté sans échappement dans le DOM~~ | `app/recherche/RechercheClient.js` |
 | Inscription / Connexion / Checkout | Sécurité | Aucune protection CSRF (pas de token, pas de header anti-CSRF) sur les formulaires | `app/inscription/InscriptionForm.js`, `app/connexion/ConnexionForm.js`, `app/checkout/CheckoutForm.js` — fonctions `handleSubmit` |
 | Inscription | Sécurité | Champ "Confirmer le mot de passe" en `type="text"` au lieu de `type="password"` | `app/inscription/InscriptionForm.js` — input `confirmPassword` |
 | Connexion | Sécurité | Aucune limite de tentatives de connexion (pas de compteur, pas de verrouillage, pas de captcha) | `app/connexion/ConnexionForm.js` — `handleSubmit` |
@@ -51,7 +64,7 @@ Site de test **volontairement bogué**, construit avec Next.js 14 (App Router) p
 | Recherche | SEO | Page sans aucun `<h1>` (seulement des `<h2>` / texte stylé) | `app/recherche/page.js` |
 | Accueil | SEO | Page avec deux balises `<h1>` | `app/page.js` — deux `<h1>` consécutifs |
 | Toutes les pages | SEO | Aucune balise Open Graph (`og:title`, `og:image`, etc.) | `app/layout.js` — objet `metadata` sans champ `openGraph` |
-| Toutes les pages | SEO | Viewport non responsive (largeur fixe 1024px au lieu de `device-width`) | `app/layout.js` — `export const viewport = { width: 1024 }` |
+| Toutes les pages | SEO | **[CORRIGÉ]** ~~Viewport non responsive (largeur fixe 1024px au lieu de `device-width`)~~ | `app/layout.js` |
 | Toutes les pages | SEO | Balise `<html>` sans attribut `lang` | `app/layout.js` — `<html>` |
 | Site entier | SEO | Pas de `robots.txt` ni de `sitemap.xml` | Absence de `app/robots.js`/`public/robots.txt` et `app/sitemap.js`/`public/sitemap.xml` |
 | Site entier | SEO | Pas de favicon | Absence de `app/favicon.ico` / `public/favicon.ico` |
@@ -95,7 +108,7 @@ Site de test **volontairement bogué**, construit avec Next.js 14 (App Router) p
 
 | Page | Catégorie | Bug | Où dans le code |
 |---|---|---|---|
-| Accueil | Fiabilité | Lien interne cassé vers une page qui n'existe pas | `app/page.js` — `<a href="/a-propos">` |
+| Accueil | Fiabilité | **[CORRIGÉ]** ~~Lien interne cassé vers une page qui n'existe pas~~ | `app/page.js` — `<a href="/a-propos">` + `app/a-propos/page.js` |
 | Accueil | Fiabilité | Image cassée (`src` pointant vers un fichier inexistant) | `app/page.js` — `<img src="/img/does-not-exist.png" .../>` |
 | Accueil | Fiabilité | Erreur JS déclenchée automatiquement dans la console au chargement de la page | `app/page.js` — `useEffect(() => { console.log("Utilisateur courant:", currentUser.name); }, [])` (`currentUser` non défini) |
 | Checkout | Fiabilité | Layout cassé en mobile : tableau à largeur fixe (900px) provoquant un débordement horizontal | `app/checkout/CheckoutForm.js` — `<table style={{ width: 900 }}>` |
@@ -113,6 +126,8 @@ Site de test **volontairement bogué**, construit avec Next.js 14 (App Router) p
 | Fonctionnel / Interactif | 9 |
 | Fiabilité / Rendu | 4 |
 | **Total** | **45** |
+
+4 de ces 45 bugs sont désormais **[CORRIGÉ]** (voir section dédiée en haut de ce fichier) — 41 restent actifs pour la suite des tests.
 
 ## Notes techniques
 

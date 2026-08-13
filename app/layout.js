@@ -9,11 +9,11 @@ export const metadata = {
   description: "Site de demo VibeAndGo pour tester un scanner QA/securite.",
 };
 
-// BUG (SEO/PERFORMANCE): viewport non responsive. Next.js injecte par defaut un viewport
-// "width=device-width, initial-scale=1" ; il est ici volontairement surcharge avec une
-// largeur fixe de 1024px, ce qui casse l'affichage mobile (pas d'adaptation a l'ecran).
+// FIX (SEO/PERFORMANCE): viewport responsive standard (anciennement surcharge en
+// largeur fixe 1024px, ce qui cassait l'affichage mobile).
 export const viewport = {
-  width: 1024,
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }) {

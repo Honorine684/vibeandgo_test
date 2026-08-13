@@ -34,15 +34,11 @@ export default function RechercheClient() {
   return (
     <div>
       {/*
-        BUG (SECURITE - XSS): le parametre de recherche "q" est reinjecte tel quel dans le DOM
-        via dangerouslySetInnerHTML, sans aucun echappement. Essayer par exemple :
-        /recherche?q=<img src=x onerror=alert(1)>
+        FIX (SECURITE - XSS): le parametre de recherche "q" est desormais rendu comme texte
+        React classique ({variable}), qui echappe automatiquement le HTML. Plus de
+        dangerouslySetInnerHTML ici. Anciennement vulnerable a /recherche?q=<img src=x onerror=alert(1)>
       */}
-      <div
-        dangerouslySetInnerHTML={{
-          __html: `Resultats pour : ${query}`,
-        }}
-      />
+      <div>Resultats pour : {query}</div>
 
       <div className="field" style={{ maxWidth: 260 }}>
         <label htmlFor="category">Filtrer par categorie</label>

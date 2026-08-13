@@ -10,8 +10,10 @@ export default function ConnexionForm() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // BUG (SECURITE): cookie pose cote client sans les attributs Secure / HttpOnly / SameSite.
-    document.cookie = "vg_session=guest-" + Date.now() + "; path=/";
+    // FIX (SECURITE): le cookie de session est maintenant pose par le serveur (voir
+    // app/api/session/route.js) avec HttpOnly + Secure + SameSite=Strict, au lieu d'un
+    // `document.cookie` cote client sans aucun de ces attributs.
+    fetch("/api/session");
   }, []);
 
   // BUG (SECURITE): aucune limite de tentatives / verrouillage de compte / captcha,
