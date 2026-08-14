@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const MOCK_USER = { email: "test@vibeandgo.test", password: "Test1234!" };
+import { useRouter } from "next/navigation";
+import { API_URL } from "../lib/api";
 
 export default function ConnexionForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     // FIX (SECURITE): le cookie de session est maintenant pose par le serveur (voir
@@ -18,18 +20,31 @@ export default function ConnexionForm() {
 
   // BUG (SECURITE): aucune limite de tentatives / verrouillage de compte / captcha,
   // meme apres de nombreuses soumissions successives (pas de compteur d'essais du tout).
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    setSubmitting(true);
+    setError("");
 
-    // BUG (FONCTIONNEL): le login echoue systematiquement, meme avec les identifiants
-    // mockes corrects (test@vibeandgo.test / Test1234!), a cause du "false &&" ci-dessous
-    // qui court-circuite volontairement la validation.
-    const isValid = false && email === MOCK_USER.email && password === MOCK_USER.password;
+    try {
+      const res = await fetch(`${API_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-    if (isValid) {
-      setError("");
-    } else {
-      setError("Identifiants invalides.");
+      if (res.ok) {
+        // FIX (FONCTIONNEL): le login utilise desormais un vrai backend et reussit
+        // avec les identifiants mockes corrects (test@vibeandgo.test / Test1234!).
+        localStorage.setItem("vg_auth_token", data.token);
+        router.push("/dashboard");
+      } else {
+        setError(data.error || "Identifiants invalides.");
+      }
+    } catch {
+      setError("Erreur de connexion au serveur.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -70,8 +85,8 @@ export default function ConnexionForm() {
         </p>
       )}
 
-      <button type="submit" className="btn">
-        Se connecter
+      <button type="submit" className="btn" disabled={submitting}>
+        {submitting ? "Connexion..." : "Se connecter"}
       </button>
 
       <p style={{ marginTop: 12 }}>

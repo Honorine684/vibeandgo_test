@@ -2,6 +2,11 @@
 
 Site de test **volontairement bogué**, construit avec Next.js 14 (App Router) pour valider un outil de scan QA/sécurité automatisé. Toutes les données sensibles (clés API, tokens, mots de passe) sont **fausses** — aucun vrai secret n'est présent dans ce dépôt.
 
+**Frontend** : https://vibeandgotest.vercel.app
+**Backend** : https://vibeandgo-backend.onrender.com (Node/Express, déployé séparément sur Render — voir dossier `backend/`)
+
+> Le backend est hébergé sur le tier gratuit de Render : la première requête après une période d'inactivité peut prendre 30-60s (cold start).
+
 ## ✅ Bugs corrigés (test de résolution automatique)
 
 Un échantillon représentatif (1 par catégorie) a été **réellement corrigé** le 2026-08-13 pour valider qu'un scanner re-scanné détecte bien la disparition du bug et le marque comme résolu, plutôt que de simplement tester les faux négatifs sur bugs encore présents. Les 41 autres bugs du tableau restent intacts.
@@ -15,13 +20,16 @@ Un échantillon représentatif (1 par catégorie) a été **réellement corrigé
 
 Les lignes correspondantes dans les tableaux ci-dessous sont marquées **[CORRIGÉ]**.
 
+Par ailleurs, le login (`test@vibeandgo.test` / `Test1234!`) a été rendu **réellement fonctionnel** le 2026-08-14 avec l'ajout du backend (voir section API/Backend ci-dessous) — l'ancien bug "le login échoue systématiquement" est donc aussi marqué [CORRIGÉ].
+
 ## Comptes / valeurs utiles pour tester
 
-- Identifiants mockés de connexion : `test@vibeandgo.test` / `Test1234!` (le login échoue **volontairement** même avec ces identifiants corrects — voir bug FONCT-9).
+- Identifiants mockés de connexion : `test@vibeandgo.test` / `Test1234!` — **le login fonctionne réellement** (backend Express + JWT), redirige vers `/dashboard`.
 - Payload XSS de démonstration : `/recherche?q=<img src=x onerror=alert(1)>`
 - Déclencheur du crash de recherche : sur `/recherche`, sélectionner la catégorie **"Inexistant"** dans le filtre.
 - Open redirect de démonstration : `/redirect?to=https://example.com`
 - Produit inexistant (soft 404) : `/produit/999`
+- Signal d'injection SQL : champ de recherche sur `/dashboard`, essayer une référence contenant une apostrophe, ex. `vibe'test`, ou directement `GET https://vibeandgo-backend.onrender.com/api/orders/search?ref=vibe'test`
 
 ## Pages du site
 
@@ -34,6 +42,7 @@ Les lignes correspondantes dans les tableaux ci-dessous sont marquées **[CORRIG
 | `/checkout` | Formulaire de commande / paiement |
 | `/produit/[id]` | Fiche produit (utilisée pour le bug "soft 404") |
 | `/redirect?to=` | Utilitaire de redirection (open redirect) |
+| `/dashboard` | Espace client protégé par connexion (backend) |
 | n'importe quelle URL inconnue | 404 réelle (`app/not-found.js`) |
 
 ---
@@ -102,7 +111,7 @@ Les lignes correspondantes dans les tableaux ci-dessous sont marquées **[CORRIG
 | Recherche | Fonctionnel | Pagination cassée : les boutons "Suivant"/"Précédent" ne changent jamais la page | `app/recherche/RechercheClient.js` — `onClick={() => {}}` |
 | Recherche | Fonctionnel | Liste "Recherches récentes" toujours vide, sans message explicatif | `app/recherche/RechercheClient.js` — `const recentSearches = []` rendue sans état vide géré |
 | Checkout | Fonctionnel | Bouton de validation finale invisible (texte blanc sur fond blanc) | `app/checkout/CheckoutForm.js` — bouton `submit`, `style={{ color: "#fff", background: "#fff" }}` |
-| Connexion | Fonctionnel | Le login échoue systématiquement, même avec les identifiants mockés corrects | `app/connexion/ConnexionForm.js` — `handleSubmit` : `const isValid = false && ...` (court-circuit volontaire) |
+| Connexion | Fonctionnel | **[CORRIGÉ]** ~~Le login échoue systématiquement, même avec les identifiants mockés corrects~~ | `app/connexion/ConnexionForm.js` + `backend/server.js` (`POST /api/login`) |
 
 ## 🧱 FIABILITÉ / RENDU
 
@@ -112,6 +121,20 @@ Les lignes correspondantes dans les tableaux ci-dessous sont marquées **[CORRIG
 | Accueil | Fiabilité | Image cassée (`src` pointant vers un fichier inexistant) | `app/page.js` — `<img src="/img/does-not-exist.png" .../>` |
 | Accueil | Fiabilité | Erreur JS déclenchée automatiquement dans la console au chargement de la page | `app/page.js` — `useEffect(() => { console.log("Utilisateur courant:", currentUser.name); }, [])` (`currentUser` non défini) |
 | Checkout | Fiabilité | Layout cassé en mobile : tableau à largeur fixe (900px) provoquant un débordement horizontal | `app/checkout/CheckoutForm.js` — `<table style={{ width: 900 }}>` |
+
+## 🔌 API / BACKEND
+
+Backend Node/Express séparé, déployé sur Render : `https://vibeandgo-backend.onrender.com`. Ajouté le 2026-08-14 pour donner du contenu réel aux checks de sécurité API (auth, CORS, cache, erreurs serveur) — le reste du site restait purement statique jusqu'ici.
+
+| Page / Endpoint | Catégorie | Bug | Où dans le code |
+|---|---|---|---|
+| `GET /api/customers` | Sécurité | Contournement d'authentification : liste des clients (emails, téléphones factices) renvoyée sans aucun token ni session | `backend/server.js` — route `app.get("/api/customers", ...)` sans middleware `requireAuth` |
+| `GET /api/customers/:id` | Sécurité / Fiabilité | Fuite d'information : id inconnu → exception non gérée, vraie stack trace Node renvoyée brute dans la réponse JSON | `backend/server.js` — `customer.email` accédé sans vérifier que `customer` existe ; capturé par le middleware d'erreur générique qui renvoie `err.stack` |
+| `DELETE /api/customers/:id` | Sécurité | Méthode destructive acceptée sans authentification, renvoie un corps JSON réaliste | `backend/server.js` — route `app.delete("/api/customers/:id", ...)` sans `requireAuth` |
+| `PUT /api/customers/:id` | Sécurité | Méthode de modification acceptée sans authentification, renvoie l'objet modifié (y compris des champs injectés par le client) | `backend/server.js` — route `app.put("/api/customers/:id", ...)` sans `requireAuth`, `...req.body` fusionné tel quel |
+| `GET /api/dashboard` (appelé par `/dashboard`) | Sécurité | CORS mal configuré : `Access-Control-Allow-Origin: *` combiné à `Access-Control-Allow-Credentials: true` sur cette route précise (contrairement au reste du backend, restreint à l'origine du frontend) | `backend/server.js` — `res.set("Access-Control-Allow-Origin", "*")` + `res.set("Access-Control-Allow-Credentials", "true")` dans la route `/api/dashboard` |
+| `GET /api/dashboard` (appelé par `/dashboard`) | Sécurité | `Cache-Control: public` sur une réponse contenant des données utilisateur sensibles (email, téléphone) | `backend/server.js` — `res.set("Cache-Control", "public, max-age=60")`, corps `{ user: { email, phone }, orders }` |
+| `GET /api/orders/search?ref=` (appelé par `/dashboard`) | Sécurité | Signal d'injection SQL : une valeur contenant une apostrophe non fermée renvoie une erreur 500 avec un message imitant un vrai message Postgres (`syntax error ... code 42601`) | `backend/server.js` — route `app.get("/api/orders/search", ...)`, condition `ref.includes("'")` |
 
 ---
 
@@ -125,12 +148,15 @@ Les lignes correspondantes dans les tableaux ci-dessous sont marquées **[CORRIG
 | Accessibilité | 4 |
 | Fonctionnel / Interactif | 9 |
 | Fiabilité / Rendu | 4 |
-| **Total** | **45** |
+| API / Backend | 7 |
+| **Total** | **52** |
 
-4 de ces 45 bugs sont désormais **[CORRIGÉ]** (voir section dédiée en haut de ce fichier) — 41 restent actifs pour la suite des tests.
+5 de ces 52 bugs sont désormais **[CORRIGÉ]** (4 de la section dédiée en haut du fichier + le login, corrigé avec l'ajout du backend) — 47 restent actifs pour la suite des tests.
 
 ## Notes techniques
 
 - La page 404 réelle (`app/not-found.js`) fonctionne correctement (statut 404) — elle sert de contraste volontaire avec le "soft 404" de `/produit/999`.
 - Le dépôt utilise Next.js `14.2.35` (patché pour la CVE critique de contournement de middleware de la branche 14.2.x) afin d'éviter d'exposer une vraie faille exploitable sur un site public ; les bugs listés ci-dessus sont les seuls volontairement injectés.
 - Hébergé sur Vercel (domaine `*.vercel.app`), la plateforme injecte automatiquement le header `Strict-Transport-Security` au niveau infra, indépendamment de la configuration de l'app — il ne peut pas être retiré ici. C'est pourquoi le bug "headers de sécurité absents" porte sur CSP / X-Frame-Options / X-Content-Type-Options (vérifiés absents), et non sur HSTS.
+- Le backend (`backend/server.js`) utilise un secret JWT codé en dur et factice (`FAKE-JWT-SECRET-DO-NOT-USE-...`), pour rester cohérent avec le reste du site (aucun vrai secret nulle part). Le CORS par défaut du backend est correctement restreint à l'origine du frontend (`vibeandgotest.vercel.app`) — seule la route `/api/dashboard` a le CORS volontairement mal configuré (voir section API/Backend).
+- Le backend est déployé sur le tier gratuit de Render, qui met le service en veille après inactivité (cold start ~30-60s sur la première requête).
