@@ -52,11 +52,11 @@ Par ailleurs, le login (`test@vibeandgo.test` / `Test1234!`) a été rendu **ré
 | Page | Catégorie | Bug | Où dans le code |
 |---|---|---|---|
 | Toutes les pages | Sécurité | Aucun header de sécurité applicatif (CSP, X-Frame-Options, X-Content-Type-Options...) | `next.config.js` — aucune fonction `headers()` définie |
-| Connexion | Sécurité | **[CORRIGÉ]** ~~Cookie de session posé sans `Secure`, `HttpOnly` ni `SameSite`~~ | `app/connexion/ConnexionForm.js` + `app/api/session/route.js` |
+| Connexion | Sécurité | **[CORRIGÉ, partiellement ré-ouvert]** ~~Cookie de session posé sans `Secure`, `HttpOnly` ni `SameSite`~~ — `HttpOnly`/`Secure` restent actifs, mais `SameSite` a été repassé à `None` le 2026-08-18 pour tester si le scanner détecte le CSRF que ça réintroduit | `app/connexion/ConnexionForm.js` + `app/api/session/route.js` |
 | Accueil | Sécurité | Fausse clé API visible en clair dans un commentaire HTML du code source | `app/page.js` — `dangerouslySetInnerHTML` contenant `<!-- DEBUG API_SECRET_KEY=FAKE-DO-NOT-USE-... -->` |
 | Inscription | Sécurité | Mot de passe stocké en clair dans `localStorage` | `app/inscription/InscriptionForm.js` — `handleSubmit` : `localStorage.setItem("vg_user_password", form.password)` |
 | Recherche | Sécurité | **[CORRIGÉ]** ~~XSS DOM : le paramètre `?q=` est réinjecté sans échappement dans le DOM~~ | `app/recherche/RechercheClient.js` |
-| Inscription / Connexion / Checkout | Sécurité | Aucune protection CSRF (pas de token, pas de header anti-CSRF) sur les formulaires | `app/inscription/InscriptionForm.js`, `app/connexion/ConnexionForm.js`, `app/checkout/CheckoutForm.js` — fonctions `handleSubmit` |
+| Inscription / Connexion / Checkout | Sécurité | Aucune protection CSRF (pas de token, pas de header anti-CSRF) sur les formulaires. Depuis le 2026-08-18, `SameSite=None` sur le cookie de session (voir ligne ci-dessus) rend ce signal effectivement exploitable, pour tester si le scanner le détecte | `app/inscription/InscriptionForm.js`, `app/connexion/ConnexionForm.js`, `app/checkout/CheckoutForm.js` — fonctions `handleSubmit` ; `app/api/session/route.js` |
 | Inscription | Sécurité | Champ "Confirmer le mot de passe" en `type="text"` au lieu de `type="password"` | `app/inscription/InscriptionForm.js` — input `confirmPassword` |
 | Connexion | Sécurité | Aucune limite de tentatives de connexion (pas de compteur, pas de verrouillage, pas de captcha) | `app/connexion/ConnexionForm.js` — `handleSubmit` |
 | Checkout | Sécurité | Clé API exposée en clair dans le code JS client, et token visible dans l'URL | `app/checkout/CheckoutForm.js` — `const PAYMENT_API_KEY = "FAKE-PAYMENT-KEY-DO-NOT-USE-..."` et `href={`/checkout/recu?token=${PAYMENT_API_KEY}`}` |
