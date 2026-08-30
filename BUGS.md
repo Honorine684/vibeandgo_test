@@ -172,3 +172,20 @@ Ajoutées pour valider le correctif P1 du scanner : *"le scanner ne doit plus ja
 | `/crash/` | **Non implémentée.** Faire planter un onglet de façon fiable en headless (grosses allocations, DOM sans fin) dépend trop de l'environnement (limites mémoire du conteneur, comportement du GC, Chromium qui tue proprement l'onglet plutôt que de vraiment crasher) pour être un test reproductible. À valider par revue de code plutôt que sur le site, comme convenu. |
 
 **Vérifié en direct le 2026-08-30** : `/slow`, `/slow/a`, `/slow/b`, `/slow/c` répondent bien en ~1s en HTTP brut. `GET /api/slow/stall` a tenu la connexion 130 055ms (dans la fenêtre 90-180s prévue) sans être coupée par Render ni par Cloudflare devant, et renvoie 200 avec le bon CORS pour l'origine du frontend. Deux redéploiements manuels ont été nécessaires (webhook GitHub→Vercel et build Render tous deux restés bloqués sur l'ancien code après le push) — rien à signaler côté comportement de la fixture elle-même une fois en prod.
+
+**Constat en croisant un scan complet du 2026-08-30 14:14** : `/slow` et `/slow/a` se sont fait ramasser par un crawl normal (pas ciblé sur `/slow/` en racine) sans faire échouer le scan ni générer de bandeau "incomplet" — tous les findings remontés dessus (lien 🔗 sans texte, `lang` manquant, contraste, cibles tactiles) sont des éléments du layout partagé visibles dès `domcontentloaded`, avant que le fetch de 90-180s ne bloque quoi que ce soit. Ça suggère que ce scanner extrait ses findings DOM/SEO/a11y sans attendre `networkidle` pour tout son pipeline — seuls les checks qui en dépendent réellement (spinner, soumission de formulaire) seraient bloqués. Le vrai test de baseline nécessite de pointer le crawl sur `/slow/` comme racine, pas de compter sur une découverte incidente.
+
+## 🧪 Fixtures P2 (2026-08-30, pas des bugs du site)
+
+Ajoutées pour valider 3 corrections "P2" du scanner (rapport qui ment sur ce qu'il a réellement testé) :
+
+| Fixture | Comportement | Où |
+|---|---|---|
+| **P2.1 — page fantôme** | Lien mort `/promo-2024` ajouté dans le footer (partagé, toutes les pages). La page 404 globale (`app/not-found.js`) a un vrai `<title>` et du texte visible, mais **volontairement pas de `<h1>`** — sert à vérifier que le scanner ne remonte plus de findings "contenu" (h1, lang...) sur une page qui n'existe pas, tout en gardant le finding "lien cassé" lui-même. `/a-propos` (dans la grille de bugs ci-dessus, marqué corrigé) est **réellement en ligne** depuis le 2026-08-13 — ce n'est plus un lien mort, il ne peut plus servir à ce test. | `app/layout.js` (lien footer), `app/not-found.js` |
+| **P2.2 — plantage moteur-spécifique** | `app/EngineTrap.js`, monté dans `app/layout.js`, détecte le vrai WebKit/Safari (regex UA excluant Chrome/Firefox qui contiennent aussi "Safari") et appelle `window.chrome.loadTimes()` (API Chrome-only, absente sur WebKit) sans garde → exception non rattrapée au montage. Aucun `error.js`/`global-error.js` dans ce dépôt → Next.js remplace toute la page (header/nav compris) par son fallback d'erreur générique sur cet appareil, à chaque page chargée. Chrome et Firefox ne sont pas affectés. | `app/EngineTrap.js`, monté dans `app/layout.js` |
+| **P2.3 — connexion confirmée** | Aucun changement nécessaire : `ConnexionForm.js` fait déjà `router.push("/dashboard")` (changement d'URL réel) après un login réussi. **Attention** : les identifiants corrects sont `test@vibeandgo.test` / `Test1234!` — pas `test@vibeandgotest.test` comme écrit dans la demande initiale, ce mail-là n'existe pas côté backend et échouerait le test. | `app/connexion/ConnexionForm.js` (inchangé) |
+
+**Vérif prod à faire après déploiement** :
+- `curl -i https://vibeandgotest.vercel.app/promo-2024` → 404, contenu réel, aucun `<h1>` dans le HTML.
+- Scan WebKit (iPad/iPhone Safari) → devrait crawler ~1 page contre ~8 pour Chrome/Firefox sur le même run.
+- Login avec `test@vibeandgo.test` / `Test1234!` → redirection vers `/dashboard` confirmée par changement d'URL.

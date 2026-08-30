@@ -1,4 +1,5 @@
 import "./globals.css";
+import EngineTrap from "./EngineTrap";
 
 // BUG (SEO): pas de balises Open Graph (og:title, og:image, etc.) definies nulle part dans le site.
 export const metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({ children }) {
     // BUG (SEO): balise <html> sans attribut lang.
     <html>
       <body>
+        <EngineTrap />
         <header className="site-header">
           <a href="/" style={{ fontWeight: 700, textDecoration: "none", color: "#111827" }}>
             VibeAndGo
@@ -48,6 +50,15 @@ export default function RootLayout({ children }) {
             <a href="https://example.com" target="_blank">
               🔗
             </a>
+          </p>
+          {/*
+            Fixture P2.1 (pas un bug) : lien mort vers une page qui n'existe pas
+            (/promo-2024 -> 404 reel, voir app/not-found.js) pour tester que le
+            scanner ne remonte plus de findings "contenu" (h1, lang...) sur une
+            page qui n'existe pas, tout en gardant le finding "lien casse" lui-meme.
+          */}
+          <p>
+            <a href="/promo-2024">Promo</a>
           </p>
         </footer>
       </body>
