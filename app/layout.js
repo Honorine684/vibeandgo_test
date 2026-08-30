@@ -60,6 +60,22 @@ export default function RootLayout({ children }) {
           <p>
             <a href="/promo-2024">Promo</a>
           </p>
+          {/*
+            Fixture P3/C1 (checkHreflang) : selecteur de langue site-wide vers une vraie
+            version anglaise (/en) sans aucune balise hreflang nulle part (ni ici ni sur /en)
+            - sert a declencher le check hreflang, qui ne tourne aujourd'hui jamais sur le
+            chemin MPA. Voir BUGS.md, section fixtures P3.
+          */}
+          <p style={{ fontSize: 13 }}>
+            <a href="/">FR</a> · <a href="/en">EN</a>
+          </p>
+          {/*
+            Fixture P3 (pas un bug) : lien site-wide vers /spa pour que le crawl decouvre
+            cette sous-page (en-tetes de securite + XSS par page, voir app/spa/).
+          */}
+          <p style={{ fontSize: 13 }}>
+            <a href="/spa">Espace SPA (test)</a>
+          </p>
         </footer>
       </body>
     </html>

@@ -189,3 +189,26 @@ Ajoutées pour valider 3 corrections "P2" du scanner (rapport qui ment sur ce qu
 - `curl -i https://vibeandgotest.vercel.app/promo-2024` → 404, contenu réel, aucun `<h1>` dans le HTML.
 - Scan WebKit (iPad/iPhone Safari) → devrait crawler ~1 page contre ~8 pour Chrome/Firefox sur le même run.
 - Login avec `test@vibeandgo.test` / `Test1234!` → redirection vers `/dashboard` confirmée par changement d'URL.
+
+**Statut 2026-08-31** : les 3 fixes P2 sont confirmés actifs en production (scan du 2026-08-30 22:34) — P2.1 en particulier n'apparaissait plus corrigé sur les 2 scans précédents (21:32 et 22:15), confirmé le 3e essai. `/promo-2024` et `/checkout/recu` ne remontent plus que leur finding `BROKEN_LINK`, plus aucun faux finding de contenu (h1/lang/liens/contraste/tap-targets), et un nouveau bandeau confirme le retrait explicite des pages mortes de l'analyse.
+
+## 🧪 Fixtures P3 (2026-08-31, pas des bugs du site) — C1
+
+Ajoutées pour valider la phase C1 du scanner : unification de la suite de checks (une seule fonction, appelée à la fois par le crawl MPA et le crawl SPA — aujourd'hui certains checks ne tournent que dans l'un des deux chemins). Le site de test est en Next.js App Router = chemin MPA par défaut, donc 3 checks n'y tournent jamais aujourd'hui ; 2 autres ne tournent qu'une fois sur `baseUrl` côté SPA.
+
+| Fixture | Check visé | Où |
+|---|---|---|
+| `<link rel="canonical">` sur `/a-propos` pointant vers `/a-propos-2019` (404) | `checkCanonical` | `app/a-propos/page.js` — `metadata.alternates.canonical` |
+| Sélecteur de langue site-wide (footer, FR/EN) vers une vraie page `/en`, sans aucune balise `hreflang` nulle part | `checkHreflang` | `app/layout.js` (lien footer), `app/en/page.js` (nouveau) |
+| Champ "Code promo" sur `/checkout` sans `<label>`, sans `aria-label`, sans `aria-labelledby` — distinct du champ téléphone sans label sur `/inscription` (celui-là couvert par `checkAccessibility`, pas `checkFormLabels`) | `checkFormLabels` | `app/checkout/CheckoutForm.js` — input `promo` |
+| Sous-page `/spa` avec des en-têtes de sécurité (`X-Frame-Options`, `X-Content-Type-Options`) absents du reste du site (voir bug sitewide existant, `next.config.js`) | `checkSecurityHeaders` par page | `middleware.js` (nouveau, `matcher: "/spa/:path*"`) |
+| Formulaire sur `/spa` (pseudo → aperçu) réinjectant la valeur soumise sans échappement (`dangerouslySetInnerHTML`), distinct du XSS déjà corrigé sur `/recherche?q=` | `checkFormXss` / `checkReflectedUrlXss` par page | `app/spa/page.js`, `app/spa/SpaClient.js` (nouveaux) |
+
+`/spa` sert aussi de point d'entrée pour la fixture C2-A (section 100% CSR à venir : `/spa/tableau`, `/spa/reglages`, `/spa/facture` via routeur client, pas de page Next correspondante). Lien découvrable depuis le footer (toutes les pages).
+
+**À vérifier en prod après déploiement** :
+- `curl -i https://vibeandgotest.vercel.app/a-propos` → `<link rel="canonical" href=".../a-propos-2019">` présent dans le `<head>`, et `/a-propos-2019` renvoie bien 404.
+- `curl -i https://vibeandgotest.vercel.app/en` → 200, contenu réel, aucune balise `hreflang` dans le HTML ni sur `/`.
+- `curl -i https://vibeandgotest.vercel.app/checkout` → input `id="promo"` présent, sans `<label for="promo">` ni `aria-label`/`aria-labelledby` associé.
+- `curl -i https://vibeandgotest.vercel.app/spa` → présence de `X-Frame-Options: DENY` et `X-Content-Type-Options: nosniff` dans les headers de réponse, absents sur `curl -i https://vibeandgotest.vercel.app/`.
+- Sur `/spa`, saisir `<img src=x onerror=alert(1)>` dans le champ pseudo, soumettre → payload injecté tel quel dans le DOM (aperçu), non échappé.

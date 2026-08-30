@@ -6,7 +6,7 @@ import { useState } from "react";
 const PAYMENT_API_KEY = "FAKE-PAYMENT-KEY-DO-NOT-USE-51H8VibeAndGoTestOnly";
 
 export default function CheckoutForm() {
-  const [form, setForm] = useState({ nom: "", email: "", adresse: "" });
+  const [form, setForm] = useState({ nom: "", email: "", adresse: "", promo: "" });
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,6 +39,15 @@ export default function CheckoutForm() {
       <div className="field">
         <label htmlFor="adresse">Adresse de livraison</label>
         <input id="adresse" name="adresse" value={form.adresse} onChange={handleChange} required />
+      </div>
+
+      <div className="field">
+        {/*
+          Fixture P3/C1 (checkFormLabels) : champ sans <label> associe (ni id+for, ni
+          aria-label, ni aria-labelledby) - distinct du champ telephone sans label sur
+          /inscription (couvert par checkAccessibility). Voir BUGS.md, fixtures P3.
+        */}
+        <input id="promo" name="promo" placeholder="Code promo" value={form.promo} onChange={handleChange} />
       </div>
 
       <div className="field">
