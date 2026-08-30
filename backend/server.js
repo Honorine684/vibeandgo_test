@@ -123,12 +123,32 @@ app.put("/api/customers/:id", (req, res) => {
     .json({ updated: true, customer: { id, email: `user${id}@example.test`, ...req.body } });
 });
 
+// --- 7. Fixture de test scanner : endpoint volontairement tres lent ---
+// PAS un bug du site — sert de cible pour valider le correctif "P1" du scanner
+// (un scan qui n'a rien pu tester doit finir en echec/incomplet, jamais en 100/100).
+// Consomme par app/slow/*.js (StallFetch) : le fetch client declenche a l'arrivee
+// sur une page /slow/* reste en attente 90-180s avant de resoudre, ce qui empeche
+// networkidle de se stabiliser pendant tout ce temps sans jamais bloquer la reponse
+// HTTP initiale de la page elle-meme (rendue par Next.js independamment de cet appel).
+app.get("/api/slow/stall", (req, res) => {
+  const delayMs = 90_000 + Math.floor(Math.random() * 90_000); // 90-180s
+  setTimeout(() => {
+    res.json({ ok: true, delayMs });
+  }, delayMs);
+});
+
 // Middleware d'erreur : renvoie volontairement la stack trace Node brute au client.
 app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message, stack: err.stack });
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`vibeandgo-backend listening on port ${PORT}`);
 });
+
+// Necessaire pour que /api/slow/stall (ci-dessus) puisse rester en attente
+// jusqu'a 180s sans que Node ne coupe la connexion sous le nez d'Express.
+server.timeout = 0; // pas de timeout d'inactivite socket
+server.keepAliveTimeout = 185_000;
+server.headersTimeout = 190_000;
