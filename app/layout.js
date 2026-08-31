@@ -3,6 +3,12 @@ import EngineTrap from "./EngineTrap";
 
 // BUG (SEO): pas de balises Open Graph (og:title, og:image, etc.) definies nulle part dans le site.
 export const metadata = {
+  // Fixture P3/C1 (checkCanonical) : metadataBase necessaire pour que le canonical
+  // relatif de /a-propos (voir app/a-propos/page.js) se resolve en URL absolue dans le
+  // <head> rendu, au lieu de rester relatif (href="/a-propos-2019" au lieu de
+  // "https://.../a-propos-2019") - sans ca, Next.js n'ajoute pas le domaine et le check
+  // canonical peut ne pas distinguer "casse" de "absent". Voir BUGS.md, fixtures P3.
+  metadataBase: new URL("https://vibeandgotest.vercel.app"),
   title: {
     default: "VibeAndGo - Test QA",
     template: "%s | VibeAndGo",
