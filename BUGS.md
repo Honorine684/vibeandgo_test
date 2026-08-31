@@ -212,3 +212,22 @@ Ajoutées pour valider la phase C1 du scanner : unification de la suite de check
 - `curl -i https://vibeandgotest.vercel.app/checkout` → input `id="promo"` présent, sans `<label for="promo">` ni `aria-label`/`aria-labelledby` associé.
 - `curl -i https://vibeandgotest.vercel.app/spa` → présence de `X-Frame-Options: DENY` et `X-Content-Type-Options: nosniff` dans les headers de réponse, absents sur `curl -i https://vibeandgotest.vercel.app/`.
 - Sur `/spa`, saisir `<img src=x onerror=alert(1)>` dans le champ pseudo, soumettre → payload injecté tel quel dans le DOM (aperçu), non échappé.
+
+## 🧪 Fixtures P3 (2026-08-31, pas des bugs du site) — C2
+
+Ajoutées pour valider la phase C2 du scanner : fusion des deux boucles de crawl (une seule boucle qui décide par URL — `goto` d'abord, et si le sous-chemin renvoie 404 sans catch-all serveur, fallback sur navigation via le routeur client) et suppression de `detectAppType`. Construit sur `/spa` (déjà en place pour C1, gardé).
+
+| Fixture | Comportement | Où |
+|---|---|---|
+| Routeur 100% client sous `/spa` | `/spa` reste une vraie page Next.js (server-rendered). `/spa/tableau`, `/spa/reglages`, `/spa/facture` n'ont **aucune** route Next.js correspondante : un `GET` direct renvoie la 404 standard. La nav interne au shell (`SpaApp.js`) intercepte le clic (`preventDefault` + `window.history.pushState`), change l'URL et le contenu affiché sans jamais passer par le routeur Next.js ni recharger la page — les 3 liens (`<a href="/spa/tableau">` etc.) sont présents dans le HTML servi par `/spa` dès le premier chargement (pas conditionnés à l'hydratation), donc toujours visibles même sans exécuter le JS. | `app/spa/page.js` (server), `app/spa/SpaApp.js` (nouveau, client) |
+| Champ sans label sur `/spa/facture` | Input `reference` (placeholder "Reference de facture") sans `<label>`, `aria-label` ni `aria-labelledby` — sur la vue "Facture", atteignable uniquement via le routeur client. Sert à vérifier que le finding `checkFormLabels` est bien attribué à `/spa/facture` (l'URL réellement affichée) et pas à `/spa` (l'URL du dernier vrai chargement serveur). | `app/spa/SpaApp.js` — vue `facture` |
+| Hydratation lente | Pas de nouvelle fixture : `/slow/*` (voir plus haut, fixtures P1) sert déjà ce rôle — réponse HTTP rapide mais réseau jamais "au repos" avant 90-180s côté navigateur. Choisi plutôt qu'un délai artificiel sur les 3 liens de `/spa`, qui aurait fait disparaître ces liens du HTML initial et cassé la vérif `curl` ci-dessous. | `app/slow/*` (inchangé) |
+
+**Ce qui ne change pas** : les fixtures MPA existantes (canonical, hreflang, form labels sur `/checkout`/`/inscription`, en-têtes par page, XSS `/recherche` et `/spa`) sont intactes — aucun fichier de ces routes n'a été touché pour C2, en dehors de `app/spa/page.js`/`SpaApp.js` eux-mêmes (le formulaire XSS de `/spa`, `SpaClient.js`, est réutilisé tel quel dans la vue "home" du nouveau shell).
+
+**À vérifier en prod après déploiement** :
+- `curl -sI https://vibeandgotest.vercel.app/spa/tableau` → `404`.
+- `curl -sI https://vibeandgotest.vercel.app/spa/reglages` → `404`.
+- `curl -sI https://vibeandgotest.vercel.app/spa/facture` → `404`.
+- `curl -s https://vibeandgotest.vercel.app/spa | grep -o 'href="/spa/[a-z]*"'` → les 3 liens (`/spa/tableau`, `/spa/reglages`, `/spa/facture`) présents dans le HTML brut.
+- Dans un navigateur réel, sur `/spa`, cliquer "Facture" → l'URL devient `/spa/facture` sans rechargement (onglet réseau : aucune requête de navigation), le champ "Reference de facture" est visible sans `<label>` associé.
