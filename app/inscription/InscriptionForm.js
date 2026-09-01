@@ -49,11 +49,12 @@ export default function InscriptionForm() {
 
       <div className="field">
         <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
-        {/* BUG (SECURITE): champ de confirmation de mot de passe en type="text" au lieu de "password" -> le mot de passe s'affiche en clair a l'ecran. */}
+        {/* FIX (SECURITE): champ de confirmation repasse en type="password" (etait en type="text",
+            le mot de passe s'affichait en clair a l'ecran). */}
         <input
           id="confirmPassword"
           name="confirmPassword"
-          type="text"
+          type="password"
           value={form.confirmPassword}
           onChange={handleChange}
           required
