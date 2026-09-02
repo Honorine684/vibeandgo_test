@@ -95,16 +95,17 @@ app.get("/api/orders/search", (req, res) => {
   res.json({ results });
 });
 
-// --- 3. Endpoints sondes a l'aveugle, sans authentification ---
-// BUG (SECURITE): contournement d'authentification - aucune verification de session/token.
-app.get("/api/customers", (req, res) => {
+// --- 3. Endpoints clients ---
+// FIX (SECURITE): les lectures de donnees clients (emails, telephones) exigent
+// desormais une session valide -> 401 sans token. Corrige le contournement
+// d'authentification (IDOR) qui exposait tous les clients a l'aveugle.
+app.get("/api/customers", requireAuth, (req, res) => {
   res.json({ customers: FAKE_CUSTOMERS });
 });
 
-// BUG (SECURITE): fuite d'information - exception non geree, stack trace Node brute
-// renvoyee au client (voir le middleware d'erreur plus bas) quand l'id ne correspond
-// a aucun client.
-app.get("/api/customers/:id", (req, res) => {
+// FIX (SECURITE): meme guard ici. Sans token -> 401 (au lieu d'une stack trace
+// Node brute quand l'id ne correspond a aucun client).
+app.get("/api/customers/:id", requireAuth, (req, res) => {
   const customer = FAKE_CUSTOMERS.find((c) => c.id === Number(req.params.id));
   res.json({ customer: customer.email });
 });
