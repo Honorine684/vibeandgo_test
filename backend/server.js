@@ -141,8 +141,12 @@ app.put("/api/customers/:id", (req, res) => {
 // deduplication ni idempotence : deux POST identiques (double-clic sur le bouton de
 // /fixtures/forms, qui reste actif pendant l'etat "loading") sont acceptes tel quel,
 // chacun renvoyant 200. Ne stocke rien reellement, ne fait que repondre.
+// Le delai ~3,5s maintient l'etat "Envoi..." cote client assez longtemps pour qu'un
+// double-clic parte pendant que le 1er POST est encore en vol.
 app.post("/api/newsletter", (req, res) => {
-  res.status(200).json({ subscribed: true, email: req.body?.email || null });
+  setTimeout(() => {
+    res.status(200).json({ subscribed: true, email: req.body?.email || null });
+  }, 3500);
 });
 
 // --- 7. Fixture de test scanner : endpoint volontairement tres lent ---

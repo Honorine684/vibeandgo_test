@@ -34,23 +34,8 @@ export default function FixturesUiPage() {
         Payer maintenant
       </button>
 
-      {/* Fixture "INFINITE_LOADING" (checklist des 64 checks). Spinner visible des le
-          chargement de la page, qui ne disparait jamais et n'affiche jamais d'erreur. */}
-      <div role="status" aria-label="Chargement" style={{ marginTop: 16 }}>
-        <span
-          style={{
-            display: "inline-block",
-            width: 24,
-            height: 24,
-            border: "3px solid #ccc",
-            borderTopColor: "#111827",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-          }}
-        />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-
+      {/* Fixture "INFINITE_LOADING" + "INSECURE_ENDPOINT" (passif) : voir FixturesUiClient.js
+          (spinner declenche par clic, jamais resolu ; fetch same-origin /api/customers au montage). */}
       <FixturesUiClient />
     </main>
   );

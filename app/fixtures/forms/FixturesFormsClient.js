@@ -17,16 +17,16 @@ export default function FixturesFormsClient() {
     e.preventDefault();
   }
 
-  // Fixtures "DUPLICATE_SUBMIT" + "INSECURE_FORM_FIELD" + "EMAIL_CONFIRMATION_NOT_SENT"
-  // (checklist des 64 checks), toutes sur ce meme formulaire newsletter :
+  // Fixtures "DUPLICATE_SUBMIT" + "INSECURE_FORM_FIELD" (checklist des 64 checks), sur
+  // ce formulaire newsletter :
   // - le bouton reste actif pendant "submitting" (pas de disabled), et POST reellement
   //   vers /api/newsletter a chaque clic, sans deduplication cote serveur ni client ->
-  //   un double-clic envoie deux requetes identiques.
+  //   un double-clic envoie deux requetes identiques. Le handler /api/newsletter attend
+  //   ~3,5s (voir backend/server.js) pour que l'etat "Envoi..." tienne pendant le
+  //   double-clic.
   // - le champ "passwordHint" ci-dessous n'a aucun rapport avec un vrai mot de passe,
   //   mais son name/placeholder contiennent le mot "password" (voir <input> plus bas).
-  // - le message de succes affiche apres soumission est un texte de succes explicite
-  //   ("Inscription reussie", "Compte cree avec succes") sans jamais mentionner de
-  //   verification par email.
+  // (EMAIL_CONFIRMATION_NOT_SENT est traite separement sur /fixtures/inscription.)
   async function handleNewsletterSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
@@ -89,9 +89,7 @@ export default function FixturesFormsClient() {
             />
           </div>
 
-          {success && (
-            <p role="status">Inscription reussie ! Compte cree avec succes.</p>
-          )}
+          {success && <p role="status">Merci, c&apos;est note.</p>}
 
           <button type="submit" className="btn">
             {submitting ? "Envoi..." : "S'abonner"}
