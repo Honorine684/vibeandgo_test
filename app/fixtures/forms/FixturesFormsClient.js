@@ -89,9 +89,12 @@ export default function FixturesFormsClient() {
             />
           </div>
 
+          {/* Indicateur de chargement pour le chemin statique de DUPLICATE_SUBMIT :
+              class="loading" (dans LOADING_SEL) + texte qui matche PROCESSING_TEXT_RE
+              (/traitement.*en cours/). Le bouton submit reste actif -> MINOR. */}
           {submitting && (
-            <p role="status" aria-busy="true">
-              Envoi en cours&hellip;
+            <p className="loading" role="status" aria-busy="true">
+              Traitement en cours&hellip;
             </p>
           )}
           {success && <p role="status">Merci, c&apos;est note.</p>}

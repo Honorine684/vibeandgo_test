@@ -14,6 +14,19 @@ export default function FixturesInscriptionClient() {
     setDone(true);
   }
 
+  // Sur la page de succes : plus AUCUN champ (surtout pas d'input[type=password]
+  // visible, sinon le check considere qu'on est encore sur le formulaire et ne
+  // s'exerce pas). Juste le message de succes, sans mot-cle d'erreur.
+  if (done) {
+    return (
+      <div className="card">
+        <p role="status">
+          Inscription reussie ! Votre compte a ete cree avec succes. Bienvenue.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="card">
       <div className="field">
@@ -39,12 +52,6 @@ export default function FixturesInscriptionClient() {
           required
         />
       </div>
-
-      {done && (
-        <p role="status">
-          Inscription reussie ! Votre compte a ete cree avec succes. Bienvenue.
-        </p>
-      )}
 
       <button type="submit" className="btn">
         Creer mon compte
