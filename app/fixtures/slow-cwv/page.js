@@ -2,6 +2,11 @@ export const metadata = {
   title: "Fixture perf lente",
 };
 
+// Sans ca, Next.js prerende la page en statique au build : le sleep ne s'execute
+// qu'une fois pendant `next build` et la page deployee est servie instantanement.
+// force-dynamic => rendu (et donc le delai) a chaque requete.
+export const dynamic = "force-dynamic";
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
