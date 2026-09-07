@@ -17,6 +17,14 @@ export async function GET() {
   await new Promise((resolve) => setTimeout(resolve, 6500));
   return new Response(
     "<!doctype html><html><head><title>Fixture perf lente</title></head><body><h1>Fixture : reponse serveur retenue ~6,5s</h1><p>Le serveur attend avant d'envoyer le HTML.</p></body></html>",
-    { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+    {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        // Sans ca le CDN Vercel cache la reponse 200 et ressert le corps sans jamais
+        // repasser par la fonction (donc sans le hold de 6,5s).
+        "cache-control": "no-store, no-cache, must-revalidate",
+      },
+    }
   );
 }
