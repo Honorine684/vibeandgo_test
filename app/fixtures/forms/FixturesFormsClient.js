@@ -89,8 +89,16 @@ export default function FixturesFormsClient() {
             />
           </div>
 
+          {submitting && (
+            <p role="status" aria-busy="true">
+              Envoi en cours&hellip;
+            </p>
+          )}
           {success && <p role="status">Merci, c&apos;est note.</p>}
 
+          {/* Bouton JAMAIS desactive pendant l'envoi : double-clic possible pendant
+              que l'indicateur "Envoi en cours..." est visible et que le 1er POST
+              (retenu ~3,5s cote backend) est encore en vol. */}
           <button type="submit" className="btn">
             {submitting ? "Envoi..." : "S'abonner"}
           </button>

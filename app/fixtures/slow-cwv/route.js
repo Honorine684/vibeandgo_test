@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   await new Promise((resolve) => setTimeout(resolve, 6500));
   return new Response(
-    "<!doctype html><html><head><title>Fixture perf lente</title></head><body><h1>Fixture : reponse serveur retenue ~6,5s</h1><p>Le serveur attend avant d'envoyer le HTML.</p></body></html>",
+    "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta name=\"description\" content=\"Fixture de test : la reponse serveur est volontairement retenue environ 6,5 secondes avant l'envoi du HTML.\"><title>Fixture perf lente</title></head><body><h1>Fixture : reponse serveur retenue ~6,5s</h1><p>Le serveur attend avant d'envoyer le HTML.</p></body></html>",
     {
       status: 200,
       headers: {
