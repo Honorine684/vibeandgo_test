@@ -3,30 +3,22 @@
 import { useState } from "react";
 import { API_URL } from "../../lib/api";
 
+// Fixtures "INSECURE_FORM_FIELD" + "DUPLICATE_SUBMIT" (checklist des 64 checks) sur
+// ce SEUL formulaire newsletter (Form #1 de la page, avec un vrai bouton submit —
+// FORM_ERROR est desormais isole sur /fixtures/form-error pour ne pas faire bailer
+// la routine de test de formulaires avant d'atteindre celui-ci) :
+// - INSECURE_FORM_FIELD : le champ "password_hint" (name + placeholder contiennent
+//   "password" / "mot de passe") est en type="text".
+// - DUPLICATE_SUBMIT : le bouton n'est JAMAIS desactive pendant l'envoi ; le POST
+//   vers /api/newsletter est retenu ~3,5s cote backend, donc un double-clic envoie
+//   deux POST identiques pendant que l'indicateur "Traitement en cours..." est
+//   visible (class="loading" -> LOADING_SEL, texte -> PROCESSING_TEXT_RE).
 export default function FixturesFormsClient() {
-  const [preview, setPreview] = useState("");
   const [email, setEmail] = useState("");
   const [passwordHint, setPasswordHint] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Fixture "FORM_ERROR" (checklist des 64 checks). Champ requis, aucun bouton
-  // submit visible nulle part dans ce formulaire — le seul moyen de "valider" est
-  // la touche Entree, jamais expose visuellement a l'utilisateur.
-  function handlePreviewSubmit(e) {
-    e.preventDefault();
-  }
-
-  // Fixtures "DUPLICATE_SUBMIT" + "INSECURE_FORM_FIELD" (checklist des 64 checks), sur
-  // ce formulaire newsletter :
-  // - le bouton reste actif pendant "submitting" (pas de disabled), et POST reellement
-  //   vers /api/newsletter a chaque clic, sans deduplication cote serveur ni client ->
-  //   un double-clic envoie deux requetes identiques. Le handler /api/newsletter attend
-  //   ~3,5s (voir backend/server.js) pour que l'etat "Envoi..." tienne pendant le
-  //   double-clic.
-  // - le champ "passwordHint" ci-dessous n'a aucun rapport avec un vrai mot de passe,
-  //   mais son name/placeholder contiennent le mot "password" (voir <input> plus bas).
-  // (EMAIL_CONFIRMATION_NOT_SENT est traite separement sur /fixtures/inscription.)
   async function handleNewsletterSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
@@ -43,70 +35,46 @@ export default function FixturesFormsClient() {
   }
 
   return (
-    <>
-      <section className="card">
-        <h2>Apercu (sans bouton d&apos;envoi)</h2>
-        <form onSubmit={handlePreviewSubmit}>
-          <div className="field">
-            <label htmlFor="preview-input">Nom du produit</label>
-            <input
-              id="preview-input"
-              name="preview"
-              type="text"
-              value={preview}
-              onChange={(e) => setPreview(e.target.value)}
-              required
-            />
-          </div>
-        </form>
-      </section>
+    <section className="card">
+      <h2>Newsletter</h2>
+      <form onSubmit={handleNewsletterSubmit}>
+        <div className="field">
+          <label htmlFor="newsletter-email">Adresse email</label>
+          <input
+            id="newsletter-email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
 
-      <section className="card">
-        <h2>Newsletter</h2>
-        <form onSubmit={handleNewsletterSubmit}>
-          <div className="field">
-            <label htmlFor="newsletter-email">Adresse email</label>
-            <input
-              id="newsletter-email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+        <div className="field">
+          <label htmlFor="newsletter-password-hint">Indice mot de passe (test)</label>
+          <input
+            id="newsletter-password-hint"
+            name="password_hint"
+            type="text"
+            placeholder="mot de passe habituel"
+            value={passwordHint}
+            onChange={(e) => setPasswordHint(e.target.value)}
+            autoComplete="on"
+          />
+        </div>
 
-          <div className="field">
-            <label htmlFor="newsletter-password-hint">Indice mot de passe (test)</label>
-            <input
-              id="newsletter-password-hint"
-              name="password_hint"
-              type="text"
-              placeholder="mot de passe habituel"
-              value={passwordHint}
-              onChange={(e) => setPasswordHint(e.target.value)}
-              autoComplete="on"
-            />
-          </div>
+        {submitting && (
+          <p className="loading" role="status" aria-busy="true">
+            Traitement en cours&hellip;
+          </p>
+        )}
+        {success && <p role="status">Merci, c&apos;est note.</p>}
 
-          {/* Indicateur de chargement pour le chemin statique de DUPLICATE_SUBMIT :
-              class="loading" (dans LOADING_SEL) + texte qui matche PROCESSING_TEXT_RE
-              (/traitement.*en cours/). Le bouton submit reste actif -> MINOR. */}
-          {submitting && (
-            <p className="loading" role="status" aria-busy="true">
-              Traitement en cours&hellip;
-            </p>
-          )}
-          {success && <p role="status">Merci, c&apos;est note.</p>}
-
-          {/* Bouton JAMAIS desactive pendant l'envoi : double-clic possible pendant
-              que l'indicateur "Envoi en cours..." est visible et que le 1er POST
-              (retenu ~3,5s cote backend) est encore en vol. */}
-          <button type="submit" className="btn">
-            {submitting ? "Envoi..." : "S'abonner"}
-          </button>
-        </form>
-      </section>
-    </>
+        {/* Bouton JAMAIS desactive pendant l'envoi. */}
+        <button type="submit" className="btn">
+          {submitting ? "Envoi..." : "S'abonner"}
+        </button>
+      </form>
+    </section>
   );
 }
