@@ -103,6 +103,19 @@ app.get("/api/customers", requireAuth, (req, res) => {
   res.json({ customers: FAKE_CUSTOMERS });
 });
 
+// Fixture "API_AUTH_BYPASS" + "INSECURE_ENDPOINT" (checklist des 64 checks). Nouvel
+// endpoint sous /api/customers (meme perimetre "chemin sensible" que les routes
+// ci-dessus), volontairement SANS requireAuth. Distinct du fix 2026-09-02 : les deux
+// routes suivantes (/api/customers et /api/customers/:id) gardent leur requireAuth
+// intact, ne pas les toucher. DOIT rester declaree AVANT /api/customers/:id ci-dessous,
+// sinon Express la fait avaler par le param :id (qui matche n'importe quel segment
+// litteral, y compris "export"). Appelee passivement depuis /fixtures/ui au montage
+// (voir FixturesUiClient.js) pour que le trafic reseau soit observable pendant un
+// crawl normal, pas seulement atteignable par un sondage actif direct.
+app.get("/api/customers/export", (req, res) => {
+  res.json({ customers: FAKE_CUSTOMERS });
+});
+
 // FIX (SECURITE): meme guard ici. Sans token -> 401 (au lieu d'une stack trace
 // Node brute quand l'id ne correspond a aucun client).
 app.get("/api/customers/:id", requireAuth, (req, res) => {
@@ -122,6 +135,14 @@ app.put("/api/customers/:id", (req, res) => {
   res
     .status(200)
     .json({ updated: true, customer: { id, email: `user${id}@example.test`, ...req.body } });
+});
+
+// Fixture "DUPLICATE_SUBMIT" (checklist des 64 checks). Endpoint volontairement sans
+// deduplication ni idempotence : deux POST identiques (double-clic sur le bouton de
+// /fixtures/forms, qui reste actif pendant l'etat "loading") sont acceptes tel quel,
+// chacun renvoyant 200. Ne stocke rien reellement, ne fait que repondre.
+app.post("/api/newsletter", (req, res) => {
+  res.status(200).json({ subscribed: true, email: req.body?.email || null });
 });
 
 // --- 7. Fixture de test scanner : endpoint volontairement tres lent ---
