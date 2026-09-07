@@ -9,6 +9,10 @@
 // Ici : Route Handler qui retient TOUTE la reponse ~6,5s avant d'envoyer le moindre octet.
 // Aucun layout, aucun streaming -> le TTFB est le plancher : FCP, LCP ET load se
 // declenchent tous apres ~6,5s, de facon deterministe (6500 > 6000 > 4000 > 3000).
+// Sans ca, Next.js evalue le Route Handler GET au build (cache statique) : le sleep
+// ne tourne qu'une fois pendant `next build` et la reponse deployee est instantanee.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   await new Promise((resolve) => setTimeout(resolve, 6500));
   return new Response(
