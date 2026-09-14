@@ -112,7 +112,7 @@ export default function FixturesAiGenericLookPage() {
         .gen2-bento-tile.gen2-wide { grid-column: span 2; background: #dcfce7; }
         .gen2-bento-tile.gen2-small { background: #fee2e2; }
 
-        /* [8] effet "liquid glass" */
+        /* [8] effet liquid glass */
         .gen2-glass {
           background: rgba(255,255,255,0.55);
           backdrop-filter: blur(12px);
@@ -126,7 +126,7 @@ export default function FixturesAiGenericLookPage() {
         .gen2-terminal { background: #0f172a; border-radius: 16px; overflow: hidden; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.35); }
         .gen2-terminal-bar { display: flex; gap: 8px; padding: 12px 16px; background: #1e293b; }
         .gen2-terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .gen2-terminal-body { padding: 24px; font-family: "SF Mono", Menlo, monospace; font-size: 13px; color: #94a3b8; line-height: 1.8; }
+        .gen2-terminal-body { padding: 24px; font-family: Menlo, Consolas, monospace; font-size: 13px; color: #94a3b8; line-height: 1.8; }
         .gen2-terminal-body .gen2-kw { color: #c084fc; }
         .gen2-terminal-body .gen2-str { color: #86efac; }
 
@@ -149,8 +149,8 @@ export default function FixturesAiGenericLookPage() {
         .gen2-testimonial p { font-size: 14px; color: #44403c; line-height: 1.6; margin: 0 0 12px; }
         .gen2-testimonial .gen2-name { font-weight: 600; font-size: 14px; }
 
-        /* [21] "ecran de chargement" vide, sans spinner ni skeleton */
-        .gen2-empty-loading { height: 160px; border: 1px dashed #e5e7eb; border-radius: 20px; background: #fff; }
+        /* [21] ecran de chargement vide, sans spinner ni skeleton */
+        .gen2-blank-slate { height: 160px; border: 1px dashed #e5e7eb; border-radius: 20px; background: #fff; }
 
         /* [29] couleur neon saturee */
         .gen2-neon-badge {
@@ -272,7 +272,7 @@ export default function FixturesAiGenericLookPage() {
           Aperçu du tableau de bord — chargement des données
         </p>
         {/* [21] etat de chargement vide, sans spinner ni skeleton */}
-        <div className="gen2-empty-loading" />
+        <div className="gen2-blank-slate" />
       </section>
 
       <section className="gen2-section">
