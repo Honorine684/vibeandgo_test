@@ -20,10 +20,10 @@ export default function FixturesPreuvesJsErrorPage() {
 
       {/*
         PIEGE : script charge depuis jsdelivr.net (domaine different de
-        vibeandgotest.vercel.app), epingle a un commit precis de ce meme
-        depot pour rester stable/deterministe. Ajoute apres coup, une fois le
-        SHA du commit contenant public/preuves-trap-external.js connu.
+        vibeandgotest.vercel.app), epingle au commit c4a15b045c7c6a45a5446ab56ed48c7c2bf05372
+        de ce meme depot -> contenu fige pour toujours, deterministe.
       */}
+      <script src="https://cdn.jsdelivr.net/gh/Honorine684/vibeandgo_test@c4a15b045c7c6a45a5446ab56ed48c7c2bf05372/public/preuves-trap-external.js"></script>
     </main>
   );
 }
