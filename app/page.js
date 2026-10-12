@@ -85,6 +85,19 @@ export default function HomePage() {
       </section>
 
       {/*
+        Fixtures "preuves" (pas un bug du site) : 1 vrai cas + pieges par type
+        de bug, pour valider la detection ET la non-detection du scanner.
+        Voir app/fixtures/preuves/. Lien ici uniquement (pas dans le layout
+        partage) pour ne pas gonfler le nombre de liens de chaque page.
+      */}
+      <section className="card">
+        <h2>Zone de test scanner</h2>
+        <p>
+          <a href="/fixtures/preuves">Preuves de detection (6 types de bugs)</a>
+        </p>
+      </section>
+
+      {/*
         BUG (SECURITE): donnee sensible visible dans le code source HTML (commentaire).
         Une fausse cle API est laissee en clair dans un commentaire HTML.
       */}
