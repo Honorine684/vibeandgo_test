@@ -98,6 +98,9 @@ export default function HomePage() {
         <p>
           <a href="/fixtures/http">Preuves reseau (reponses HTTP)</a>
         </p>
+        <p>
+          <a href="/fixtures/markup">Preuves de balisage de la page</a>
+        </p>
       </section>
 
       {/*
