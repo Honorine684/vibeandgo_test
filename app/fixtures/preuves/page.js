@@ -35,6 +35,11 @@ export default function FixturesPreuvesPage() {
           <a href="/fixtures/preuves/paiement">Bouton de paiement (PAYMENT_BUTTON_ERROR)</a>
         </li>
         <li>
+          <a href="/fixtures/preuves/paiement-formulaire">
+            Bouton de paiement — piege formulaire (PAYMENT_BUTTON_ERROR)
+          </a>
+        </li>
+        <li>
           <a href="/fixtures/preuves/secret">Donnee sensible (SENSITIVE_DATA_EXPOSED)</a>
         </li>
         <li>

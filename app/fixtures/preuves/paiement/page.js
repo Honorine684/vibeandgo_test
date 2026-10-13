@@ -93,22 +93,17 @@ export default function FixturesPreuvesPaiementPage() {
         </button>
       </section>
 
-      <section className="card">
-        <h3>Piege D — bouton desactive, mais dans un formulaire avec des champs a remplir</h3>
-        <form>
-          <div className="field">
-            <label htmlFor="preuves-paiement-nom">Nom complet</label>
-            <input id="preuves-paiement-nom" name="nom" type="text" required />
-          </div>
-          <div className="field">
-            <label htmlFor="preuves-paiement-carte">Numero de carte</label>
-            <input id="preuves-paiement-carte" name="carte" type="text" required />
-          </div>
-          <button type="submit" className="btn" disabled>
-            Payer
-          </button>
-        </form>
-      </section>
+      {/*
+        Piege D (bouton desactive DANS un formulaire avec des champs a remplir)
+        deplace sur sa propre page, /fixtures/preuves/paiement-formulaire, pour
+        que le scanner ne puisse pas confondre les deux cas "bouton Payer
+        desactive" au niveau de la page.
+      */}
+      <p className="card">
+        <a href="/fixtures/preuves/paiement-formulaire">
+          Piege D (bouton desactive dans un formulaire) — page separee
+        </a>
+      </p>
     </main>
   );
 }
