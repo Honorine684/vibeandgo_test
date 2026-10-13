@@ -43,6 +43,9 @@ export default function FixturesPreuvesPage() {
           <a href="/fixtures/preuves/secret">Donnee sensible (SENSITIVE_DATA_EXPOSED)</a>
         </li>
         <li>
+          <a href="/fixtures/preuves/xss">XSS — champ dedie (XSS_VULNERABILITY)</a>
+        </li>
+        <li>
           <a href="/fixtures/preuves/recherche">XSS via formulaire GET (XSS_VULNERABILITY)</a>
         </li>
         <li>
