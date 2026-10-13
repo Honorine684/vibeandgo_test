@@ -95,6 +95,9 @@ export default function HomePage() {
         <p>
           <a href="/fixtures/preuves">Preuves de detection (6 types de bugs)</a>
         </p>
+        <p>
+          <a href="/fixtures/http">Preuves reseau (reponses HTTP)</a>
+        </p>
       </section>
 
       {/*
