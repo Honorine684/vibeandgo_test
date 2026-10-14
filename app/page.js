@@ -101,6 +101,9 @@ export default function HomePage() {
         <p>
           <a href="/fixtures/markup">Preuves de balisage de la page</a>
         </p>
+        <p>
+          <a href="/fixtures/measure">Preuves de mesures (performance)</a>
+        </p>
       </section>
 
       {/*
