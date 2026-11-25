@@ -19,6 +19,14 @@ export default function CheckoutForm() {
   function handleSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
+    // Fixture "Pages a ne jamais tester" : vrai POST vers /checkout/api/pay (chemin exclu),
+    // envoye sans etre attendu - ne change rien au bug existant ci-dessous (le loader reste
+    // infini quoi qu'il arrive).
+    fetch("/checkout/api/pay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    }).catch(() => {});
     // BUG (FONCTIONNEL): fetch factice qui ne se resout jamais -> loader infini, la commande
     // ne se termine jamais.
     new Promise(() => {});

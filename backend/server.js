@@ -163,6 +163,36 @@ app.get("/api/slow/stall", (req, res) => {
   }, delayMs);
 });
 
+// --- 8. Journal des visites pour la fixture "Pages a ne jamais tester" ---
+// Stockage en memoire, meme principe que FAKE_CUSTOMERS/FAKE_ORDERS ci-dessus : a la
+// difference des fonctions Vercel (frontend, serverless/edge, memoire non fiable entre
+// deux requetes), ce process Express tourne en continu sur Render, donc un simple tableau
+// survit bien entre deux requetes. Limite : si ce process redemarre (deploiement, ou
+// reveil apres mise en veille du plan gratuit Render), le journal repart vide. Jamais vide
+// automatiquement -> le vider soi-meme (DELETE /api/hits) avant de lancer un scan.
+const hits = [];
+
+app.post("/api/hits/record", (req, res) => {
+  const { method, path, userAgent, time } = req.body || {};
+  hits.push({
+    method: String(method || "").toUpperCase(),
+    path: String(path || ""),
+    userAgent: String(userAgent || ""),
+    time: time || new Date().toISOString(),
+  });
+  res.status(204).end();
+});
+
+app.get("/api/hits", (req, res) => {
+  res.json({ count: hits.length, hits });
+});
+
+app.delete("/api/hits", (req, res) => {
+  const previousCount = hits.length;
+  hits.length = 0;
+  res.json({ cleared: true, previousCount });
+});
+
 // Middleware d'erreur : renvoie volontairement la stack trace Node brute au client.
 app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message, stack: err.stack });

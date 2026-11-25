@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { API_URL } from "./app/lib/api";
 
 // Fixture P3/C1 (checkSecurityHeaders par page) : /spa recoit des en-tetes de securite
 // que le reste du site n'a pas (voir BUGS.md, bug volontaire "aucun header de securite"
@@ -13,10 +14,33 @@ import { NextResponse } from "next/server";
 // JS tardive. Isolee : aucune session ne pose jamais le cookie "vg_admin_session" nulle
 // part sur le site (pas de flux de login vers /compte), donc /compte redirige toujours
 // vers /connexion pour un visiteur anonyme.
-export function middleware(request) {
+export async function middleware(request) {
   const response = NextResponse.next();
+  const { pathname } = request.nextUrl;
 
-  if (request.nextUrl.pathname.startsWith("/spa")) {
+  // Fixture "Pages a ne jamais tester" : toute requete (quelle que soit la methode) qui
+  // atteint /checkout* ou /logout est enregistree cote backend (voir backend/server.js,
+  // section "Journal des visites" - seul process qui garde un vrai etat entre deux
+  // requetes, contrairement a cette fonction Vercel). Attendu (pas fire-and-forget) pour
+  // garantir que chaque visite est bien enregistree avant la reponse ; timeout court pour
+  // qu'un backend endormi (Render gratuit) ne puisse jamais ralentir ni casser la reponse
+  // reelle de la page exclue. Ce code ne s'execute QUE si le scan viole l'exclusion : en
+  // fonctionnement normal (scan qui respecte /checkout et /logout), aucun cout ajoute.
+  if (pathname.startsWith("/checkout") || pathname.startsWith("/logout")) {
+    await fetch(`${API_URL}/api/hits/record`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        method: request.method,
+        path: pathname,
+        userAgent: request.headers.get("user-agent") || "",
+        time: new Date().toISOString(),
+      }),
+      signal: AbortSignal.timeout(2000),
+    }).catch(() => {});
+  }
+
+  if (pathname.startsWith("/spa")) {
     response.headers.set("X-Frame-Options", "DENY");
     response.headers.set("X-Content-Type-Options", "nosniff");
     return response;
@@ -33,5 +57,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/spa/:path*", "/compte/:path*"],
+  matcher: ["/spa/:path*", "/compte/:path*", "/checkout/:path*", "/logout/:path*"],
 };

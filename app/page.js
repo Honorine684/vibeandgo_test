@@ -29,6 +29,10 @@ export default function HomePage() {
 
   const chunks = _.chunk(["a", "b", "c", "d"], 2);
 
+  function handleClearCart() {
+    fetch("/checkout/api/cart", { method: "DELETE" }).catch(() => {});
+  }
+
   return (
     <main className="container">
       {showBanner && (
@@ -103,6 +107,19 @@ export default function HomePage() {
         </p>
         <p>
           <a href="/fixtures/measure">Preuves de mesures (performance)</a>
+        </p>
+        <p>
+          <a href="/logout">Se deconnecter</a>
+        </p>
+        <p>
+          {/*
+            Fixture "Pages a ne jamais tester" : bouton sur une page NORMALE (accueil, pas
+            exclue) qui envoie DELETE vers /checkout/api/cart (chemin exclu) - teste le
+            blocage d'un envoi vers un chemin exclu declenche depuis une page autorisee.
+          */}
+          <button type="button" className="btn" onClick={handleClearCart}>
+            Supprimer mon panier
+          </button>
         </p>
       </section>
 
